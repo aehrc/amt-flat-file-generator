@@ -134,7 +134,11 @@ import jakarta.xml.bind.annotation.XmlElement;
             }
         } else if (existingTestCases.isEmpty()) {
 			this.getTestCases().add(testCase);
-		}
+        } else {
+            throw new IllegalStateException(
+                    "More than one test case with the same name already exists!"
+                            + testCase.getName());
+        }
 
 	}
 
