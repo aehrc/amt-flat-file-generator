@@ -1,9 +1,12 @@
 package au.gov.digitalhealth.terminology.amtflatfile.Junit;
 
+import static org.junit.Assert.fail;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -15,7 +18,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
+import org.junit.runner.notification.Failure;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -109,15 +112,27 @@ import jakarta.xml.bind.annotation.XmlElement;
 		if(this.getTestCases() == null)
 			this.setTestCases(new ArrayList<JUnitTestCase>());
 
-		List<JUnitTestCase> existingTestCase = this.getTestCases()
+        List<JUnitTestCase> existingTestCases = this.getTestCases()
 				.stream()
 				.filter(aCase -> aCase.getName().equals(testCase.getName()))
 				.collect(Collectors.toList());
 
-		if(existingTestCase.size() == 1) {
-			for(JUnitFailure fail : testCase.getFailures())
-				((JUnitTestCase) existingTestCase.get(0)).addFailure(fail);
-		}else if(existingTestCase.size() == 0){
+        JUnitTestCase existingTestCase;
+        if (existingTestCases.size() == 1) {
+            existingTestCase = existingTestCases.get(0);
+            for (JUnitFailure fail : existingTestCase.getFailures()) {
+                Optional<JUnitFailure> existingFailure = Optional.ofNullable(testCase.getFailures())
+                        .orElse(Collections.emptyList()).stream()
+                        .filter(f -> f.getMessage().equals(fail.getMessage())
+                                && f.getValue().equals(fail.getValue())
+                                && f.getType().equals(fail.getType()))
+                        .findAny();
+
+                if (!existingFailure.isPresent()) {
+                    existingTestCase.addFailure(fail);
+                }
+            }
+        } else if (existingTestCases.isEmpty()) {
 			this.getTestCases().add(testCase);
 		}
 
@@ -129,7 +144,17 @@ import jakarta.xml.bind.annotation.XmlElement;
         fail.setValue(detail);
         fail.setType(failType);
         JUnitTestCase testCase = new JUnitTestCase().setName(testCaseName).setClassName(className);
-        testCase.addFailure(fail);
+        Optional<JUnitFailure> existingFailure =
+                Optional.ofNullable(testCase.getFailures()).orElse(Collections.emptyList()).stream()
+                        .filter(f -> f.getMessage().equals(fail.getMessage())
+                                && f.getValue().equals(fail.getValue())
+                                && f.getType().equals(fail.getType()))
+                        .findAny();
+
+        if (!existingFailure.isPresent()) {
+            testCase.addFailure(fail);
+        }
+
         this.addTestCase(testCase);
     }
 

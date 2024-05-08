@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -141,18 +142,30 @@ public class Amt2FlatFile extends AbstractMojo {
 
     @Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
-        logger.info("Input file is " + inputZipFilePath);
-        logger.info("Output will be written to " + outputFilePath);
+        logger.log(Level.INFO, "Input file is  {}", inputZipFilePath);
+        logger.log(Level.INFO, "CSV Output will be written to {}",
+                FileFormat.CSV.getFilePath(outputFilePath));
+        logger.log(Level.INFO, "TSV Output will be written to {}",
+                FileFormat.TSV.getFilePath(outputFilePath));
 
         validateInputZipFile(inputZipFilePath);
 
-        validateOutputPath(outputFilePath, "text/csv");
+        validateOutputPath(FileFormat.TSV.getFilePath(outputFilePath),
+                FileFormat.TSV.getMimeType());
+        validateOutputPath(FileFormat.CSV.getFilePath(outputFilePath),
+                FileFormat.CSV.getMimeType());
         
         if (replacementsOutputFilePath == null || replacementsOutputFilePath.isEmpty()) {
             logger.info("Replacement file was not requested and will not be written");
         } else {
-            validateOutputPath(replacementsOutputFilePath, "text/csv");
-            logger.info("Replacement file will be written to " + replacementsOutputFilePath);
+            validateOutputPath(FileFormat.TSV.getFilePath(replacementsOutputFilePath),
+                    FileFormat.TSV.getMimeType());
+            validateOutputPath(FileFormat.CSV.getFilePath(replacementsOutputFilePath),
+                    FileFormat.CSV.getMimeType());
+            logger.log(Level.INFO, "CSV Replacement file will be written to {}",
+                    replacementsOutputFilePath);
+            logger.log(Level.INFO, "TSV Replacement file will be written to {}",
+                    replacementsOutputFilePath);
         }
 
         if (junitFilePath == null || junitFilePath.isEmpty()) {
@@ -183,9 +196,21 @@ public class Amt2FlatFile extends AbstractMojo {
                     new HashMap<>());) {
 
             conceptCache = new AmtCache(zipFileSystem, exitOnError, testSuite);
-            writeFlatFile(FileSystems.getDefault().getPath(outputFilePath));
+            writeFlatFile(
+                    FileSystems.getDefault().getPath(FileFormat.CSV.getFilePath(outputFilePath)),
+                    FileFormat.CSV);
+            writeFlatFile(
+                    FileSystems.getDefault().getPath(FileFormat.TSV.getFilePath(outputFilePath)),
+                    FileFormat.TSV);
             if (replacementsOutputFilePath != null && !replacementsOutputFilePath.isEmpty()) {
-                writeReplacementsFile(FileSystems.getDefault().getPath(replacementsOutputFilePath));
+                writeReplacementsFile(
+                        FileSystems.getDefault()
+                                .getPath(FileFormat.CSV.getFilePath(replacementsOutputFilePath)),
+                        FileFormat.CSV);
+                writeReplacementsFile(
+                        FileSystems.getDefault()
+                                .getPath(FileFormat.TSV.getFilePath(replacementsOutputFilePath)),
+                        FileFormat.TSV);
             }
 			if (junitFilePath == null || junitFilePath.trim().isEmpty()) {
 				junitFilePath = "target/ValidationErrors.xml";
@@ -202,6 +227,7 @@ public class Amt2FlatFile extends AbstractMojo {
 			throw new MojoExecutionException("Failed due to IO error executing transformation", e);
 		}
 	}
+
 
     private void validateOutputPath(String outputPath, String expectedMimeType) {
         try {
@@ -258,7 +284,7 @@ public class Amt2FlatFile extends AbstractMojo {
         }
     }
 
-    private void writeFlatFile(Path path) throws IOException {
+    private void writeFlatFile(Path path, FileFormat format) throws IOException {
         if (path.getParent() != null && !Files.exists(path.getParent())) {
             Files.createDirectory(path.getParent());
         }
@@ -267,7 +293,8 @@ public class Amt2FlatFile extends AbstractMojo {
                     StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
 
             writer.write(
-                String.join(",", "CTPP SCTID", "CTPP PT", "ARTG_ID", "TPP SCTID", "TPP PT", "TPUU SCTID", "TPUU PT",
+                    String.join(format.getDelimiter(), "CTPP SCTID", "CTPP PT", "ARTG_ID",
+                            "TPP SCTID", "TPP PT", "TPUU SCTID", "TPUU PT",
                     "TPP TP SCTID", "TPP TP PT", "TPUU TP SCTID", "TPUU TP PT", "MPP SCTID", "MPP PT", "MPUU SCTID",
                     "MPUU PT", "MP SCTID", "MP PT"));
             writer.newLine();
@@ -362,16 +389,31 @@ public class Amt2FlatFile extends AbstractMojo {
                     for (Concept mp : mps) {
                         for (String artgid : artgids) {
                             writer.write(
-                                String.join(",",
-                                    ctpp.getId() + "", "\"" + ctpp.getPreferredTerm() + "\"",
+                                    String.join(format.getDelimiter(), ctpp.getId() + "",
+                                            format.getFieldQuote() + ctpp.getPreferredTerm()
+                                                    + format.getFieldQuote(),
                                     artgid,
-                                    tpp.getId() + "", "\"" + tpp.getPreferredTerm() + "\"",
-                                    tpuu.getId() + "", "\"" + tpuu.getPreferredTerm() + "\"",
-                                    tppTp.getId() + "", "\"" + tppTp.getPreferredTerm() + "\"",
-                                    tpuuTp.getId() + "", "\"" + tpuuTp.getPreferredTerm() + "\"",
-                                    mpp.getId() + "", "\"" + mpp.getPreferredTerm() + "\"",
-                                    mpuu.getId() + "", "\"" + mpuu.getPreferredTerm() + "\"",
-                                    mp.getId() + "", "\"" + mp.getPreferredTerm() + "\""));
+                                            tpp.getId() + "",
+                                            format.getFieldQuote() + tpp.getPreferredTerm()
+                                                    + format.getFieldQuote(),
+                                            tpuu.getId() + "",
+                                            format.getFieldQuote() + tpuu.getPreferredTerm()
+                                                    + format.getFieldQuote(),
+                                            tppTp.getId() + "",
+                                            format.getFieldQuote() + tppTp.getPreferredTerm()
+                                                    + format.getFieldQuote(),
+                                            tpuuTp.getId() + "",
+                                            format.getFieldQuote() + tpuuTp.getPreferredTerm()
+                                                    + format.getFieldQuote(),
+                                            mpp.getId() + "",
+                                            format.getFieldQuote() + mpp.getPreferredTerm()
+                                                    + format.getFieldQuote(),
+                                            mpuu.getId() + "",
+                                            format.getFieldQuote() + mpuu.getPreferredTerm()
+                                                    + format.getFieldQuote(),
+                                            mp.getId() + "",
+                                            format.getFieldQuote() + mp.getPreferredTerm()
+                                                    + format.getFieldQuote()));
                             writer.newLine();
                         }
                     }
@@ -410,7 +452,7 @@ public class Amt2FlatFile extends AbstractMojo {
         return refsetMembers;
     }
 
-    private void writeReplacementsFile(Path path) throws IOException {
+    private void writeReplacementsFile(Path path, FileFormat format) throws IOException {
         if (path.getParent() != null && !Files.exists(path.getParent())) {
             Files.createDirectory(path.getParent());
         }
@@ -419,7 +461,8 @@ public class Amt2FlatFile extends AbstractMojo {
                     StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
 
             writer.write(
-                String.join(",", "INACTIVE SCTID", "INACTIVE PT", "REPLACEMENT TYPE SCTID", "REPLACEMENT TYPE PT", "REPLACEMENT SCTID",
+                    String.join(format.getDelimiter(), "INACTIVE SCTID", "INACTIVE PT",
+                            "REPLACEMENT TYPE SCTID", "REPLACEMENT TYPE PT", "REPLACEMENT SCTID",
                     "REPLACEMENT PT", "DATE"));
             writer.newLine();
             for (Replacement entry : conceptCache.getReplacementConcepts()) {
@@ -427,10 +470,18 @@ public class Amt2FlatFile extends AbstractMojo {
                     throw new RuntimeException("Null replacement concept: " + entry);
                 }
                 writer.write(
-                    String.join(",",
-                        entry.getInactiveConcept().getId() + "", "\"" + entry.getInactiveConcept().getPreferredTerm() + "\"",
-                        entry.getReplacementType().getId() + "", "\"" + entry.getReplacementType().getPreferredTerm() + "\"",
-                        entry.getActiveConcept().getId() + "", "\"" + entry.getActiveConcept().getPreferredTerm() + "\"", entry.getVersion()));
+                        String.join(format.getDelimiter(), entry.getInactiveConcept().getId() + "",
+                                format.getFieldQuote()
+                                        + entry.getInactiveConcept().getPreferredTerm()
+                                        + format.getFieldQuote(),
+                                entry.getReplacementType().getId() + "",
+                                format.getFieldQuote()
+                                        + entry.getReplacementType().getPreferredTerm()
+                                        + format.getFieldQuote(),
+                                entry.getActiveConcept().getId() + "",
+                                format.getFieldQuote() + entry.getActiveConcept().getPreferredTerm()
+                                        + format.getFieldQuote(),
+                                entry.getVersion()));
                 writer.newLine();
             }
         }
