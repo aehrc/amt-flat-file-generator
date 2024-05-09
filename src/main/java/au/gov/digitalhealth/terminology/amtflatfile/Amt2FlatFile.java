@@ -142,10 +142,10 @@ public class Amt2FlatFile extends AbstractMojo {
 
     @Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
-        logger.log(Level.INFO, "Input file is  {}", inputZipFilePath);
-        logger.log(Level.INFO, "CSV Output will be written to {}",
+        logger.log(Level.INFO, "Input file is  {0}", inputZipFilePath);
+        logger.log(Level.INFO, "CSV Output will be written to {0}",
                 FileFormat.CSV.getFilePath(outputFilePath));
-        logger.log(Level.INFO, "TSV Output will be written to {}",
+        logger.log(Level.INFO, "TSV Output will be written to {0}",
                 FileFormat.TSV.getFilePath(outputFilePath));
 
         validateInputZipFile(inputZipFilePath);
@@ -162,9 +162,9 @@ public class Amt2FlatFile extends AbstractMojo {
                     FileFormat.TSV.getMimeType());
             validateOutputPath(FileFormat.CSV.getFilePath(replacementsOutputFilePath),
                     FileFormat.CSV.getMimeType());
-            logger.log(Level.INFO, "CSV Replacement file will be written to {}",
+            logger.log(Level.INFO, "CSV Replacement file will be written to {0}",
                     replacementsOutputFilePath);
-            logger.log(Level.INFO, "TSV Replacement file will be written to {}",
+            logger.log(Level.INFO, "TSV Replacement file will be written to {0}",
                     replacementsOutputFilePath);
         }
 
