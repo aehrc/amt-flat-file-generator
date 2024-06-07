@@ -431,7 +431,7 @@ public class Amt2FlatFile extends AbstractMojo {
                     testSuite.addTestCase("Mismatch", message, this.getClass().getName(), "MPP mismatch (" + mpp.getId() + ")", "ERROR");
                 }
 
-                if ( count % 10000 == 0) {
+                if ( count % 1000 == 0) {
                     long endTime = System.currentTimeMillis();
                     logger.info("Processed CTPP [" + count + " of " + ctppCount + "] Time spent processing 10000 CTPPs is " + (endTime - startTime) + "ms");
                     startTime = System.currentTimeMillis();
