@@ -18,8 +18,9 @@ class TerminologyFileVisitor extends SimpleFileVisitor<Path> {
 
     private static final int MAX_FILE_SIZE = 1000000000;
 
-    private Path conceptFile, relationshipFile, descriptionFile, languageRefsetFile, artgIdRefsetFile, medicinalProductRefsetFile;
+    private Path conceptFile, relationshipFile, descriptionFile, languageRefsetFile, artgIdRefsetFile;
     private List<Path> historicalAssociationRefsetFiles = new ArrayList<>();
+    private List<Path> AMTRefsetFiles = new ArrayList<>();
 
     private Tika tika = new Tika();
 
@@ -27,65 +28,93 @@ class TerminologyFileVisitor extends SimpleFileVisitor<Path> {
     public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
         if (attr.isRegularFile()) {
             String fileName = file.getFileName().toString();
-            if (fileName.matches("sct2_Concept_Snapshot_AU1000036_\\d{8}\\.txt")) {
+            if (fileName.matches("[x]?sct2_Concept_Snapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     conceptFile = file;
                 }
-            } else if (fileName.matches("sct2_Relationship_Snapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?sct2_Relationship_Snapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     relationshipFile = file;
                 }
-            } else if (fileName.matches("sct2_Description_Snapshot-en-AU_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?sct2_Description_Snapshot-en-[Aa][Uu]_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     descriptionFile = file;
                 }
-            } else if (fileName.matches("der2_cRefset_LanguageSnapshot-en-AU_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_cRefset_LanguageSnapshot-en-[Aa][Uu]_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     languageRefsetFile = file;
                 }
-            } else if (fileName.matches("der2_iRefset_ARTGIdSnapshot_AU1000036_\\d{8}\\.txt") || fileName.matches("der2_iRefset_SimpleMapSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_iRefset_ARTGIdSnapshot_AU1000036_\\d{8}\\.txt") || fileName.matches("[x]?der2_iRefset_SimpleMapSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     artgIdRefsetFile = file;
                 }
-            } else if (fileName.matches("der2_cRefset_AssociationReferenceSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_cRefset_AssociationReferenceSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     historicalAssociationRefsetFiles.add(file);
                 }
-            } else if (fileName.matches("der2_cRefset_AlternativeAssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_cRefset_AlternativeAssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     historicalAssociationRefsetFiles.add(file);
                 }
-            } else if (fileName.matches("der2_cRefset_MovedFromAssociationReferenceSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_cRefset_MovedFromAssociationReferenceSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     historicalAssociationRefsetFiles.add(file);
                 }
-            } else if (fileName.matches("der2_cRefset_MovedToAssociationReferenceSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_cRefset_MovedToAssociationReferenceSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     historicalAssociationRefsetFiles.add(file);
                 }
-            } else if (fileName.matches("der2_cRefset_PossiblyEquivalentToAssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_cRefset_PossiblyEquivalentToAssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     historicalAssociationRefsetFiles.add(file);
                 }
-            } else if (fileName.matches("der2_cRefset_ReplacedByAssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_cRefset_ReplacedByAssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     historicalAssociationRefsetFiles.add(file);
                 }
-            } else if (fileName.matches("der2_cRefset_SameAsAssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_cRefset_SameAsAssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     historicalAssociationRefsetFiles.add(file);
                 }
-            } else if (fileName.matches("der2_cRefset_WasAAssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_cRefset_WasAAssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     historicalAssociationRefsetFiles.add(file);
                 }
-            } else if (fileName.matches("der2_cRefset_AssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_cRefset_AssociationSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
                     historicalAssociationRefsetFiles.add(file);
                 }
-            } else if (fileName.matches("der2_Refset_MedicinalProductSnapshot_AU1000036_\\d{8}\\.txt") || fileName.matches("der2_Refset_SimpleSnapshot_AU1000036_\\d{8}\\.txt")) {
+            } else if (fileName.matches("[x]?der2_Refset_SimpleSnapshot_AU1000036_\\d{8}\\.txt")) {
                 if (verifyFile(file)) {
-                    medicinalProductRefsetFile = file;
+                    AMTRefsetFiles.add(file);
+                }
+            } else if (fileName.matches("[x]?der2_Refset_MedicinalProductPackSnapshot_AU1000036_\\d{8}\\.txt")) {
+                if (verifyFile(file)) {
+                    AMTRefsetFiles.add(file);
+                }
+            } else if (fileName.matches("[x]?der2_Refset_MedicinalProductSnapshot_AU1000036_\\d{8}\\.txt")) {
+                if (verifyFile(file)) {
+                    AMTRefsetFiles.add(file);
+                }
+            } else if (fileName.matches("[x]?der2_Refset_MedicinalProductUnitOfUseSnapshot_AU1000036_\\d{8}\\.txt")) {
+                if (verifyFile(file)) {
+                    AMTRefsetFiles.add(file);
+                }
+            } else if (fileName.matches("[x]?der2_Refset_ContaineredTradeProductPackSnapshot_AU1000036_\\d{8}\\.txt")) {
+                if (verifyFile(file)) {
+                    AMTRefsetFiles.add(file);
+                }
+            } else if (fileName.matches("[x]?der2_Refset_TradeProductPackSnapshot_AU1000036_\\d{8}\\.txt")) {
+                if (verifyFile(file)) {
+                    AMTRefsetFiles.add(file);
+                }
+            } else if (fileName.matches("[x]?der2_Refset_TradeProductSnapshot_AU1000036_\\d{8}\\.txt")) {
+                if (verifyFile(file)) {
+                    AMTRefsetFiles.add(file);
+                }
+            } else if (fileName.matches("[x]?der2_Refset_TradeProductUnitOfUseSnapshot_AU1000036_\\d{8}\\.txt")) {
+                if (verifyFile(file)) {
+                    AMTRefsetFiles.add(file);
                 }
             }
         }
@@ -126,9 +155,10 @@ class TerminologyFileVisitor extends SimpleFileVisitor<Path> {
         return artgIdRefsetFile;
     }
 
-    public Path getMedicinalProductRefsetFile() {
-        return medicinalProductRefsetFile;
+    public List<Path> getAMTRefsetFiles() {
+        return AMTRefsetFiles;
     }
+
 
     public List<Path> getHistoricalAssociationRefsetFiles() {
         return historicalAssociationRefsetFiles;

@@ -70,7 +70,7 @@ An example execution is
       <artifactId>amt-to-flat-file</artifactId>
       <configuration>
         <inputZipFilePath>NCTS_SCT_RF2_DISTRIBUTION_32506021000036107-XXX-SNAPSHOT.zip</inputZipFilePath>
-        <outputFilePath>amt-flat-file.csv</outputFilePath>
+        <outputFilePath>amt-flat-file</outputFilePath>
       </configuration>
     <plugin>
   <plugins>
