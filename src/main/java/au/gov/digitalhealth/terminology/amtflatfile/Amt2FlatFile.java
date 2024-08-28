@@ -392,7 +392,7 @@ public class Amt2FlatFile extends AbstractMojo {
                                     String.join(format.getDelimiter(), ctpp.getId() + "",
                                             format.getFieldQuote() + ctpp.getPreferredTerm()
                                                     + format.getFieldQuote(),
-                                    artgid,
+                                            artgid,
                                             tpp.getId() + "",
                                             format.getFieldQuote() + tpp.getPreferredTerm()
                                                     + format.getFieldQuote(),

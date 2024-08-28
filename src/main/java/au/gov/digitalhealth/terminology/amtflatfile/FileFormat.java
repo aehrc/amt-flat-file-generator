@@ -32,7 +32,11 @@ public enum FileFormat {
     }
 
     public String getFieldQuote() {
-        return DOUBLEQUOTE;
+        if (this.equals(TSV)) {
+            return "";
+        } else {
+            return DOUBLEQUOTE;
+        }
     }
 
 
