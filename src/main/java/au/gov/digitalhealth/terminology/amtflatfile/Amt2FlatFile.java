@@ -297,7 +297,7 @@ public class Amt2FlatFile extends AbstractMojo {
                             "TPP SCTID", "TPP PT", "TPUU SCTID", "TPUU PT",
                     "TPP TP SCTID", "TPP TP PT", "TPUU TP SCTID", "TPUU TP PT", "MPP SCTID", "MPP PT", "MPUU SCTID",
                     "MPUU PT", "MP SCTID", "MP PT"));
-            writer.newLine();
+            writer.write("\r\n");
 
             int count = 1;
             int ctppCount = conceptCache.getCtppsFromRefset().values().size();
@@ -414,7 +414,7 @@ public class Amt2FlatFile extends AbstractMojo {
                                             mp.getId() + "",
                                             format.getFieldQuote() + mp.getPreferredTerm()
                                                     + format.getFieldQuote()));
-                            writer.newLine();
+                            writer.write("\r\n");
                         }
                     }
                 }
@@ -464,7 +464,7 @@ public class Amt2FlatFile extends AbstractMojo {
                     String.join(format.getDelimiter(), "INACTIVE SCTID", "INACTIVE PT",
                             "REPLACEMENT TYPE SCTID", "REPLACEMENT TYPE PT", "REPLACEMENT SCTID",
                     "REPLACEMENT PT", "DATE"));
-            writer.newLine();
+            writer.write("\r\n");
             for (Replacement entry : conceptCache.getReplacementConcepts()) {
                 if (entry.getInactiveConcept() == null || entry.getReplacementType() == null || entry.getActiveConcept() == null) {
                     throw new RuntimeException("Null replacement concept: " + entry);
@@ -482,7 +482,7 @@ public class Amt2FlatFile extends AbstractMojo {
                                 format.getFieldQuote() + entry.getActiveConcept().getPreferredTerm()
                                         + format.getFieldQuote(),
                                 entry.getVersion()));
-                writer.newLine();
+                writer.write("\r\n");
             }
         }
     }
