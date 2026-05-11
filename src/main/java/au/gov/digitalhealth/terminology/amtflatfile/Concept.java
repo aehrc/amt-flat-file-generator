@@ -136,7 +136,7 @@ public class Concept {
 
     @Override
     public String toString() {
-        return "Concept [id=" + id + ", fullSpecifiedName=" + fullSpecifiedName + ", parents=" + parents + "]";
+        return "Concept [id=" + id + ", fullSpecifiedName=" + fullSpecifiedName + ", preferredTerm=" + preferredTerm + ", active=" + active + "]";
     }
 
     @Override

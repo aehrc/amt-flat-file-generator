@@ -208,34 +208,48 @@ public class Amt2FlatFile extends AbstractMojo {
             "jar:file:" + FileSystems.getDefault().getPath(inputZipFilePath).toAbsolutePath()),
         new HashMap<>())) {
 
-      conceptCache = new AmtCache(zipFileSystem, exitOnError, testSuite);
-      writeFlatFile(
-          FileSystems.getDefault().getPath(FileFormat.CSV.getFilePath(outputFilePath)),
-          FileFormat.CSV);
-      writeFlatFile(
-          FileSystems.getDefault().getPath(FileFormat.TSV.getFilePath(outputFilePath)),
-          FileFormat.TSV);
-      if (replacementsOutputFilePath != null && !replacementsOutputFilePath.isEmpty()) {
-        writeReplacementsFile(
-            FileSystems.getDefault()
-                .getPath(FileFormat.CSV.getFilePath(replacementsOutputFilePath)),
+      try {
+        conceptCache = new AmtCache(zipFileSystem, exitOnError, testSuite);
+        writeFlatFile(
+            FileSystems.getDefault().getPath(FileFormat.CSV.getFilePath(outputFilePath)),
             FileFormat.CSV);
-        writeReplacementsFile(
-            FileSystems.getDefault()
-                .getPath(FileFormat.TSV.getFilePath(replacementsOutputFilePath)),
+        writeFlatFile(
+            FileSystems.getDefault().getPath(FileFormat.TSV.getFilePath(outputFilePath)),
             FileFormat.TSV);
+        if (replacementsOutputFilePath != null && !replacementsOutputFilePath.isEmpty()) {
+          writeReplacementsFile(
+              FileSystems.getDefault()
+                  .getPath(FileFormat.CSV.getFilePath(replacementsOutputFilePath)),
+              FileFormat.CSV);
+          writeReplacementsFile(
+              FileSystems.getDefault()
+                  .getPath(FileFormat.TSV.getFilePath(replacementsOutputFilePath)),
+              FileFormat.TSV);
+        }
+      } catch (Exception e) {
+        String errorMessage = e.getMessage() != null ? e.getMessage() : e.toString();
+        logger.severe("Error during processing: " + errorMessage);
+        testSuite.addTestCase("Processing error", errorMessage, this.getClass().getName(),
+            "ProcessingError", "ERROR");
+        if (exitOnError) {
+          throw e;
+        }
+      } finally {
+        if (junitFilePath == null || junitFilePath.trim().isEmpty()) {
+          junitFilePath = "target/ValidationErrors.xml";
+        }
+        File junitFile = new File(junitFilePath);
+        File parentDir = junitFile.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+          parentDir.mkdirs();
+        }
+        try (BufferedWriter outputJunitXml = new BufferedWriter(new FileWriter(junitFilePath))) {
+          testSuite.writeToFile(outputJunitXml);
+          logger.info("Output junit results to: " + new File(junitFilePath).getAbsolutePath());
+        } catch (IOException e) {
+          logger.severe("Failed to write JUnit file: " + e.getMessage());
+        }
       }
-      if (junitFilePath == null || junitFilePath.trim().isEmpty()) {
-        junitFilePath = "target/ValidationErrors.xml";
-      }
-      File junitFile = new File(junitFilePath);
-      File parentDir = junitFile.getParentFile();
-      if (parentDir != null && !parentDir.exists()) {
-        parentDir.mkdirs();
-      }
-      BufferedWriter outputJunitXml = new BufferedWriter(new FileWriter(junitFilePath));
-      testSuite.writeToFile(outputJunitXml);
-      logger.info("Output junit results to: " + new File(junitFilePath).getAbsolutePath());
     } catch (IOException e) {
       throw new MojoExecutionException("Failed due to IO error executing transformation", e);
     }

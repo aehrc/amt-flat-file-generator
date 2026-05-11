@@ -92,6 +92,7 @@ public class Amt2FlatFileTest {
     Amt2FlatFile amt2FlatFile = new Amt2FlatFile();
     amt2FlatFile.setInputZipFilePath(testResDirectory + "incomplete.zip");
     amt2FlatFile.setOutputFilePath(outFilePath);
+    amt2FlatFile.setExitOnError(true);
     amt2FlatFile.execute();
   }
 
