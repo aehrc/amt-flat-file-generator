@@ -181,17 +181,32 @@ public class Amt2FlatFile extends AbstractMojo {
             "jar:file:" + FileSystems.getDefault().getPath(inputZipFilePath).toAbsolutePath().toString()),
                     new HashMap<>());) {
 
-            conceptCache = new AmtCache(zipFileSystem, this.testSuite, exitOnError);
-            writeFlatFile(FileSystems.getDefault().getPath(outputFilePath));
-            if (replacementsOutputFilePath != null && !replacementsOutputFilePath.isEmpty()) {
-                writeReplacementsFile(FileSystems.getDefault().getPath(replacementsOutputFilePath));
+            try {
+                conceptCache = new AmtCache(zipFileSystem, this.testSuite, exitOnError);
+                writeFlatFile(FileSystems.getDefault().getPath(outputFilePath));
+                if (replacementsOutputFilePath != null && !replacementsOutputFilePath.isEmpty()) {
+                    writeReplacementsFile(FileSystems.getDefault().getPath(replacementsOutputFilePath));
+                }
+            } catch (Exception e) {
+                String errorMessage = e.getMessage() != null ? e.getMessage() : e.toString();
+                logger.severe("Error during processing: " + errorMessage);
+                testSuite.addTestCase("Processing error", errorMessage, "ProcessingError", "ERROR");
+                if (exitOnError) {
+                    throw e;
+                }
+            } finally {
+                if (junitFilePath == null || junitFilePath.trim().isEmpty()) {
+                    junitFilePath = "target/ValidationErrors.xml";
+                }
+                File junitFile = new File(junitFilePath);
+                junitFile.getParentFile().mkdirs();
+                try (BufferedWriter outputJunitXml = new BufferedWriter(new FileWriter(junitFile))) {
+                    testSuite.writeToFile(outputJunitXml);
+                    logger.info("Output junit results to: " + junitFile.getAbsolutePath());
+                } catch (IOException e) {
+                    logger.severe("Failed to write JUnit file: " + e.getMessage());
+                }
             }
-			if (junitFilePath == null || junitFilePath.trim().isEmpty()) {
-				junitFilePath = "target/ValidationErrors.xml";
-			}
-			BufferedWriter outputJunitXml = new BufferedWriter(new FileWriter(junitFilePath));
-			testSuite.writeToFile(outputJunitXml);
-			logger.info("Output junit results to: " + new File(junitFilePath).getAbsolutePath());
 		} catch (IOException e) {
 			throw new MojoExecutionException("Failed due to IO error executing transformation", e);
 		}

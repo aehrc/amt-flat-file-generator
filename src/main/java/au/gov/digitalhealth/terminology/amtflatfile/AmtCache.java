@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -59,6 +60,7 @@ public class AmtCache {
     private void processAmtFiles(FileSystem amtZip) throws IOException {
 
         graphCase = new JUnitTestCase_EXT().setName("Graph errors");
+        this.testSuite.addTestCase(graphCase);
 
         TerminologyFileVisitor visitor = new TerminologyFileVisitor();
 
@@ -166,11 +168,15 @@ public class AmtCache {
                 conceptCache.values().stream().filter(predicate).collect(Collectors.toSet());
 
         if (!errors.isEmpty()) {
-            logger.warning(message + " " + errors);
-            testSuite.addTestCase(message, errors.toString(), testCaseName, "ERROR");
+            String errorSummary = errors.stream().limit(100).map(Concept::toString).collect(Collectors.joining(", "));
+            if (errors.size() > 100) {
+                errorSummary += " ... and " + (errors.size() - 100) + " more";
+            }
+            logger.warning(message + " " + errorSummary);
+            testSuite.addTestCase(message, errorSummary, testCaseName, "ERROR");
 
             if (exitOnError || fix == null) {
-                throw new RuntimeException(message + " " + errors);
+                throw new RuntimeException(message + " " + errorSummary);
             } else {
                 logger.warning(
                     "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -220,15 +226,20 @@ public class AmtCache {
         if (!packConceptsWithNoUnits.isEmpty() || !mppsWithTpuus.isEmpty() || !tppsWithMpuus.isEmpty()) {
 
             String detail = "Detected pack concepts with no units "
-                    + packConceptsWithNoUnits.stream().map(c -> c.getId() + " |" + c.getPreferredTerm() + "|\n").collect(Collectors.toSet())
+                    + packConceptsWithNoUnits.stream().limit(100).map(c -> c.getId() + " |" + c.getPreferredTerm() + "|").collect(Collectors.toList())
+                    + (packConceptsWithNoUnits.size() > 100 ? " ... and " + (packConceptsWithNoUnits.size() - 100) + " more" : "")
                     + " and/or MPPs with TPUU units "
                     + mppsWithTpuus.stream()
-                        .map(c -> c.getId() + " |" + c.getPreferredTerm() + "|\n")
-                        .collect(Collectors.toSet())
+                        .limit(100)
+                        .map(c -> c.getId() + " |" + c.getPreferredTerm() + "|")
+                        .collect(Collectors.toList())
+                    + (mppsWithTpuus.size() > 100 ? " ... and " + (mppsWithTpuus.size() - 100) + " more" : "")
                     + " and/or TPP/CTPPs with MPUU units "
                     + tppsWithMpuus.stream()
-                        .map(c -> c.getId() + " |" + c.getPreferredTerm() + "|\n")
-                        .collect(Collectors.toSet());
+                        .limit(100)
+                        .map(c -> c.getId() + " |" + c.getPreferredTerm() + "|")
+                        .collect(Collectors.toList())
+                    + (tppsWithMpuus.size() > 100 ? " ... and " + (tppsWithMpuus.size() - 100) + " more" : "");
 
             testSuite.addTestCase("Detected pack concepts with no units and/or MPPs with TPUU units and/or TPP/CTPPs with MPUU units",
                 detail, "heirarchy_error", "ERROR");
@@ -236,6 +247,14 @@ public class AmtCache {
             if (exitOnError) {
                 throw new RuntimeException(detail);
             }
+        }
+    }
+
+    private void handleRowError(String message, Exception e) {
+        logger.severe(message + ": " + e.getMessage());
+        testSuite.addTestCase(message, e.getMessage(), "DataLoadingError", "ERROR");
+        if (exitOnError) {
+            throw new RuntimeException(message, e);
         }
     }
 
@@ -251,7 +270,7 @@ public class AmtCache {
                 conceptCache.put(conceptId, new Concept(conceptId, isActive(row)));
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed processing row: " + row + " of Concepts file", e);
+            handleRowError("Failed processing row: " + Arrays.toString(row) + " of Concepts file", e);
         }
     }
 
@@ -285,7 +304,7 @@ public class AmtCache {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed processing row: " + row + " of Relationships file", e);
+            handleRowError("Failed processing row: " + Arrays.toString(row) + " of Relationships file", e);
         }
 
     }
@@ -307,7 +326,7 @@ public class AmtCache {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed processing row: " + row + " of Descriptions file", e);
+            handleRowError("Failed processing row: " + Arrays.toString(row) + " of Descriptions file", e);
         }
     }
 
@@ -318,7 +337,7 @@ public class AmtCache {
                 preferredDescriptionIdCache.add(Long.parseLong(row[5]));
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed processing row: " + row + " of Language file", e);
+            handleRowError("Failed processing row: " + Arrays.toString(row) + " of Language file", e);
         }
 
     }
@@ -330,7 +349,7 @@ public class AmtCache {
                 conceptCache.get(conceptId).addArtgIds(row[6]);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed processing row: " + row + " of ARTG file", e);
+            handleRowError("Failed processing row: " + Arrays.toString(row) + " of ARTG file", e);
         }
     }
 
@@ -344,7 +363,7 @@ public class AmtCache {
                 replacements.add(Triple.of(inactiveConcept, replacementType, replacementConcept));
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed processing row: " + row + " of History file", e);
+            handleRowError("Failed processing row: " + Arrays.toString(row) + " of History file", e);
         }
     }
 
