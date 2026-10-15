@@ -119,8 +119,10 @@ import jakarta.xml.bind.annotation.XmlElement;
         JUnitTestCase existingTestCase;
         if (existingTestCases.size() == 1) {
             existingTestCase = existingTestCases.get(0);
-            for (JUnitFailure fail : existingTestCase.getFailures()) {
-                Optional<JUnitFailure> existingFailure = Optional.ofNullable(testCase.getFailures())
+            // Walk the NEW case's failures. Walking the existing list while adding to it threw
+            // ConcurrentModificationException on the second bad row, which stopped the generator.
+            for (JUnitFailure fail : Optional.ofNullable(testCase.getFailures()).orElse(Collections.emptyList())) {
+                Optional<JUnitFailure> existingFailure = Optional.ofNullable(existingTestCase.getFailures())
                         .orElse(Collections.emptyList()).stream()
                         .filter(f -> f.getMessage().equals(fail.getMessage())
                                 && f.getValue().equals(fail.getValue())
