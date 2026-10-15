@@ -71,19 +71,25 @@ import jakarta.xml.bind.annotation.XmlElement;
 			testSuiteEl.setAttribute("errors", "0");
 			testSuiteEl.setAttribute("name", "validation.errors");
 
+			// One <testcase> per failure: JUnit readers such as Azure DevOps' publisher keep only the
+			// first <failure> of a test case, so further bad rows would be dropped from the report.
 			for (JUnitTestCase testCase : this.getTestCases()) {
-				Element testCaseEl = doc.createElement("testcase");
-				testCaseEl.setAttribute("name", testCase.getName());
-				testCaseEl.setAttribute("classname", "flatfile." + testCase.getClassName());
+				List<JUnitFailure> failures = testCase.getFailures();
+				for (int i = 0; i < failures.size(); i++) {
+					JUnitFailure failure = failures.get(i);
+					Element testCaseEl = doc.createElement("testcase");
+					String name = failures.size() == 1 ? testCase.getName()
+							: testCase.getName() + " (" + (i + 1) + " of " + failures.size() + ")";
+					testCaseEl.setAttribute("name", name);
+					testCaseEl.setAttribute("classname", "flatfile." + testCase.getClassName());
 
-				for (JUnitFailure failure : testCase.getFailures()) {
 					Element failEl = doc.createElement("failure");
 					failEl.setAttribute("message", failure.getMessage());
 					failEl.setAttribute("type", failure.getType());
 					failEl.setTextContent(failure.getValue());
 					testCaseEl.appendChild(failEl);
+					testSuiteEl.appendChild(testCaseEl);
 				}
-				testSuiteEl.appendChild(testCaseEl);
 			}
 		}
 

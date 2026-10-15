@@ -33,6 +33,21 @@ public class JUnitTestSuiteTest {
         "Failed processing row: [row-3]"});
   }
 
+  // Azure DevOps' JUnit publisher reads only the first <failure> of a <testcase>, so a second bad row
+  // under the same test case never reached the Tests tab (daily-rvf build 17082).
+  @Test(description = "Each failure is written as its own uniquely named test case")
+  public void writesOneFailurePerTestCase() throws IOException {
+    JUnitTestSuite suite = new JUnitTestSuite();
+
+    suite.addTestCase("Failed processing row: [row-1]", "concept is null", CLASS_NAME, "DataLoadingError", "ERROR");
+    suite.addTestCase("Failed processing row: [row-2]", "concept is null", CLASS_NAME, "DataLoadingError", "ERROR");
+
+    List<JUnitTestCase> written = writtenTestCases(suite);
+    Assert.assertEquals(written.size(), 2);
+    written.forEach(testCase -> Assert.assertEquals(testCase.getFailures().size(), 1, testCase.getName()));
+    Assert.assertEquals(written.stream().map(JUnitTestCase::getName).distinct().count(), 2L);
+  }
+
   @Test(description = "The same failure added twice is reported once")
   public void reportsARepeatedFailureOnce() throws IOException {
     JUnitTestSuite suite = new JUnitTestSuite();
@@ -44,14 +59,18 @@ public class JUnitTestSuiteTest {
   }
 
   private static List<String> writtenFailureMessages(JUnitTestSuite suite) throws IOException {
+    return writtenTestCases(suite).stream()
+        .flatMap(testCase -> testCase.getFailures().stream())
+        .map(JUnitFailure::getMessage)
+        .collect(Collectors.toList());
+  }
+
+  private static List<JUnitTestCase> writtenTestCases(JUnitTestSuite suite) throws IOException {
     File xml = File.createTempFile("junit-suite", ".xml");
     xml.deleteOnExit();
     try (BufferedWriter out = new BufferedWriter(new FileWriter(xml))) {
       suite.writeToFile(out);
     }
-    return JUnitFileParser.parse(xml).stream()
-        .flatMap(testCase -> testCase.getFailures().stream())
-        .map(JUnitFailure::getMessage)
-        .collect(Collectors.toList());
+    return JUnitFileParser.parse(xml);
   }
 }
